@@ -4,6 +4,7 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import messagebox
 from pathlib import Path
+import re
 
 class SpeakingAssistant(Frame):
   def __init__(self, root):
@@ -13,6 +14,7 @@ class SpeakingAssistant(Frame):
     self.filepath = None
     self.original_answer = None
     self.revised_answers = None
+    self.question = ''
 
     self.main_frame = Frame(self.root)
     self.main_frame.grid(padx=20, pady=20, sticky='we')
@@ -49,6 +51,7 @@ class SpeakingAssistant(Frame):
 
   def generate_text(self):
     try:
+      self.question = self.question_entry.get().strip()
       # Transcribe speech to text
       client = OpenAI()
       audio_file = open(self.filepath, 'rb')
@@ -65,7 +68,7 @@ class SpeakingAssistant(Frame):
         messages=[
           {
             'role': 'system',
-            'content': f'You are a highly skilled AI that is trained in English speaking and eductaion. I would like you to read the following transcript which is my answer to this practice speaking test question of IELTS: {self.question_entry.get().strip()}. Please give me a revised and enhanced version of similar length that sounds spoken by an English learner rather than a native speaker, so please avoid using advanced vocabulary. Also, please do not provide any other text in your response than the revised and enhanced answer.'
+            'content': f'You are a highly skilled AI that is trained in English speaking and eductaion. I would like you to read the following transcript which is my answer to this practice speaking test question of IELTS: {self.question}. Please give me a revised and enhanced version of similar length that sounds natural from a test taker. Also, please do not provide any other text in your response than the revised and enhanced answer.'
           },
           {
             'role': 'user',
@@ -77,17 +80,10 @@ class SpeakingAssistant(Frame):
 
       # generate text file containing the two pieces of text
       Path('outputs').mkdir(parents=True, exist_ok=True)
-      filepath = f'outputs/output.txt'
-      i = 1
-      while True:
-        if Path(filepath).exists():
-          filepath = f'outputs/output_{i}.txt'
-          i += 1
-        else:
-          break
+      filepath = f'outputs/{"_".join([w for w in re.split(r'[ ,;.?]', self.question) if w])}.txt'
 
       formatted_text = f'''
-        Q: {self.question_entry.get().strip().capitalize()}\n\n
+        Q: {self.question.capitalize()}\n\n
         Your answer:\n\n
         {self.original_answer}\n\n
         Revised answer:\n\n
