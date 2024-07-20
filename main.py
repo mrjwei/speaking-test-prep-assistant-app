@@ -61,11 +61,11 @@ class SpeakingAssistant(Frame):
 
       # Pass the text to completion API for revision
       completion = client.chat.completions.create(
-        model='gpt-4',
+        model='gpt-4o-mini',
         messages=[
           {
             'role': 'system',
-            'content': f'You are a highly skilled AI that is trained in English speaking and eductaion. I would like you to read the following transcript which is my answer to this practice speaking test question of IELTS: {self.question_entry.get().strip()}. Please give me a revised and enhanced version of similar length. Please do not provide any other text in your response than the revised and enhanced answer.'
+            'content': f'You are a highly skilled AI that is trained in English speaking and eductaion. I would like you to read the following transcript which is my answer to this practice speaking test question of IELTS: {self.question_entry.get().strip()}. Please give me a revised and enhanced version of similar length that sounds spoken by an English learner rather than a native speaker, so please avoid using advanced vocabulary. Also, please do not provide any other text in your response than the revised and enhanced answer.'
           },
           {
             'role': 'user',
@@ -87,6 +87,7 @@ class SpeakingAssistant(Frame):
           break
 
       formatted_text = f'''
+        Q: {self.question_entry.get().strip().capitalize()}\n\n
         Your answer:\n\n
         {self.original_answer}\n\n
         Revised answer:\n\n
