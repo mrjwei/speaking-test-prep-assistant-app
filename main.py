@@ -3,8 +3,16 @@ from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import messagebox
-from pathlib import Path
+import os
+from dotenv import load_dotenv
 import re
+import helpers.notion_api as api
+
+load_dotenv()
+
+NOTION_API_TOKEN = os.getenv('NOTION_API_TOKEN')
+PAGE_ID = os.getenv('PAGE_ID')
+URL = f'https://api.notion.com/v1/blocks/{PAGE_ID}/children'
 
 class SpeakingAssistant(Frame):
   def __init__(self, root):
@@ -13,7 +21,7 @@ class SpeakingAssistant(Frame):
     self.root.title = 'Speaking Assistant'
     self.filepath = None
     self.original_answer = None
-    self.revised_answers = None
+    self.revised_answer = None
     self.question = ''
 
     self.main_frame = Frame(self.root)
@@ -39,9 +47,6 @@ class SpeakingAssistant(Frame):
 
     self.quit_btn = Button(self.main_frame, text='Quit', command=lambda: self.root.quit())
     self.quit_btn.grid(row=4, column=2, columnspan=2, sticky='we', padx=5)
-
-    self.result_label = Label(self.main_frame, text='')
-    self.result_label.grid(row=5, column=0, columnspan=4)
 
   def open_file_browser(self):
     self.filepath = filedialog.askopenfilename()
@@ -78,27 +83,20 @@ class SpeakingAssistant(Frame):
       )
       self.revised_answer = completion.choices[0].message.content
 
-      # generate text file containing the two pieces of text
-      Path('outputs').mkdir(parents=True, exist_ok=True)
-      filepath = f'outputs/{"_".join([w for w in re.split(r'[ ,;.?]', self.question) if w])}.txt'
+      data = {
+        "children": [
+          api.create_block_object("heading_2", ("text", self.question.capitalize())),
+          api.create_block_object("heading_3", ("text", "My answer:")),
+          api.create_block_object("paragraph", ("text", self.original_answer)),
+          api.create_block_object("heading_3", ("text", "ChatGPT answer:")),
+          api.create_block_object("paragraph", ("text", self.revised_answer)),
+        ]
+      }
 
-      formatted_text = f'''
-        Q: {self.question.capitalize()}\n\n
-        Your answer:\n\n
-        {self.original_answer}\n\n
-        Revised answer:\n\n
-        {self.revised_answer}\n
-      '''
-
-      with open(filepath, 'w') as f:
-        f.write(formatted_text)
-
-      self._update_result_label()
+      api.send_patch_request(URL, NOTION_API_TOKEN, data)
+      messagebox.showinfo(title="Done", message="Task succeeded.")
     except Exception as e:
       messagebox.showerror(title='Error', message=f'{e}')
-
-  def _update_result_label(self):
-    self.result_label.configure(text='Done.')
 
 if __name__ == "__main__":
   root = Tk()
