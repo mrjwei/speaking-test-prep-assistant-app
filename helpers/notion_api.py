@@ -27,7 +27,6 @@ def send_patch_request(url, token, data):
 
   if response.status_code == 200:
     print("Succeeded.")
-    print("Response:", response.json())
   else:
     print("Failed.")
     print("Response:", response.text)
