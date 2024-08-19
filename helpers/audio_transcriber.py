@@ -44,5 +44,5 @@ class AudioTranscriber:
           file=audio_file,
           language='en'
         )
-        self.texts.append(result['text'])
+        self.texts.append(result.text)
       print('processed audio by calling API')

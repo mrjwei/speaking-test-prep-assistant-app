@@ -59,7 +59,8 @@ class SpeakingAssistant(Frame):
         Label(self.mode_select_frame, text='Select execution mode:').grid(
             row=0, column=0, sticky=W)
 
-        self.mode_select = Combobox(self.mode_select_frame, values=MODES)
+        self.mode_select = Combobox(self.mode_select_frame, values=list(MODES.keys()))
+        self.mode_select.bind('<<ComboboxSelected>>', self._on_select_mode)
         self.mode_select.grid(
             row=1, column=0, columnspan=4, sticky='we', padx=5)
         self.mode_select.current(0)
@@ -148,8 +149,11 @@ class SpeakingAssistant(Frame):
         self.gen_btn.grid(row=0, column=0, columnspan=2, sticky='we', padx=5)
 
         self.quit_btn = Button(
-            self.buttons_frame, text='Quit', command=lambda: self.root.quit())
+            self.buttons_frame, text='Quit', command=self.quit)
         self.quit_btn.grid(row=0, column=2, columnspan=2, sticky='we', padx=5)
+
+    def _on_select_mode(self, event):
+      self.mode = self.mode_select.get().strip()
 
     def _show_alert_msg(self, msg_widget, row_index, col_index):
         msg_widget.grid(row=row_index, column=col_index, sticky=W, padx=5)
@@ -172,7 +176,7 @@ class SpeakingAssistant(Frame):
     def _initialize_audio_app(self, title, callback):
         self.audio_app_window = Toplevel(self.root)
         self.audio_app = AudioRecordingGUI(
-            self.audio_app_window, title, callback, mode='local', **self.kwargs)
+            self.audio_app_window, title, callback, mode=MODES[self.mode], **self.kwargs)
 
     def record_question(self):
         if self.audio_app_window:
@@ -261,6 +265,11 @@ class SpeakingAssistant(Frame):
             messagebox.showinfo(title="Done", message="Task succeeded.")
         except Exception as e:
             messagebox.showerror(title='Error', message=f'{e}')
+
+    def quit(self):
+      if self.audio_app and self.audio_app.recorder.audio_thread:
+        self.audio_app.recorder.audio_thread.join()
+      self.root.quit()
 
 
 if __name__ == "__main__":

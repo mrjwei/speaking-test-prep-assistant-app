@@ -143,6 +143,9 @@ class AudioRecordingGUI:
       self.root.after(1000, self.update_timer)
 
   def quit(self):
+    self.stop()
     self.reset_timer()
+    if self.recorder.audio_thread:
+      self.recorder.audio_thread.join()
     self.root.destroy()
 
